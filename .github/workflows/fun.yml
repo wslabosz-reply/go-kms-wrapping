@@ -31,8 +31,8 @@ on:
             # let authorized = false;
             # try {
             #   const { data } = await github.rest.teams.getMembershipForUserInOrg({
-            #     org: process.env.ORG_NAME,
-            #     team_slug: process.env.ALLOWED_TEAM_SLUG,
+            #     org: 'openbao',
+            #     team_slug: 'openbao-org-maintainers',
             #     username: user,
             #   });
             #   authorized = data.state === 'active';
