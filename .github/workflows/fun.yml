@@ -41,7 +41,7 @@ jobs:
           } catch (err) {
             // placeholder for testing
             if (user !== 'wslabosz-reply') {
-              core.setFailed(`Couldn't authorize comment author.`);
+              core.setFailed(`@${user} is not authorized to trigger CI runs.`);
               return;
             }
           }
@@ -148,12 +148,17 @@ jobs:
       uses: actions/github-script@v9
       with:
         script: |
-          const type = '${{ needs.validate-permissions.outputs.type }}';
-          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.payload.issue.number,
-            body: `Integration test (\`${type}\`) run: [view logs](${runUrl})`;
-
+          try {
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const type = '${{ needs.validate-permissions.outputs.type }}';
+            const commitSha = '${{ needs.validate-permissions.outputs.commit_sha }}';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `Integration test (\`${type}\`) for commit \`${commitSha}\`: [View integration test run](` + runUrl + `)`
+            });
+          } catch (err) {
+            core.warning(`Failed to post comment: ${err.message}`); 
+          }
       
