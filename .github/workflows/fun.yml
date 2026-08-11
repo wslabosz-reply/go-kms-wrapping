@@ -27,18 +27,18 @@ jobs:
           const user = context.payload.comment.user.login;
           const prNumber = context.payload.issue.number;
 
-          ## TODO: figure out permission
-          # let authorized = false;
-          # try {
-          #   const { data } = await github.rest.teams.getMembershipForUserInOrg({
-          #     org: 'openbao',
-          #     team_slug: 'openbao-org-maintainers',
-          #     username: user,
-          #   });
-          #   authorized = data.state === 'active';
-          # } catch (err) {
-          #   authorized = false;
-          # }
+          /* TODO: figure out permission
+           let authorized = false;
+           try {
+            const { data } = await github.rest.teams.getMembershipForUserInOrg({
+              org: 'openbao',
+              team_slug: 'openbao-org-maintainers',
+              username: user,
+            });
+            authorized = data.state === 'active';
+          } catch (err) {
+            authorized = false;
+          } */
 
           const match = body.match(/^\/integration\s+(\S+)\s+([0-9a-fA-F]{40})\s*$/);
           if (!match) {
