@@ -80,7 +80,7 @@ permissions:
               content: "+1",
             });
 
-        # TOCTOU protection: confirm commit_sha is part of this PR's history
+        # TOCTOU protection: confirm commit_sha is part of this PR's history or has landed on main.
       - name: Verify commit belongs to PR
         uses: actions/github-script@v9
         with:
@@ -95,8 +95,23 @@ permissions:
             });
 
             const found = commits.some((c) => c.sha === commitSha);
+            let partOfMain = false;
             if (!found) {
-              core.setFailed(`Commit ${commitSha} not in PR history.`);
+              const main = context.payload.repository.default_branch;
+              try {
+                const { data } = await github.rest.repos.compareCommitsWithBasehead({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  basehead: `${main}...${commitSha}`,
+                });
+                partOfMain = data.status === 'identical' || data.status === 'behind';
+              } catch (err) {
+                partOfMain = false;
+              }
+            }
+
+            if (!found || !partOfMain) {
+              core.setFailed(`Commit ${commitSha} not in PR history nor already on main.`);
             }
 
       - name: Checkout reviewed commit with provided sha
