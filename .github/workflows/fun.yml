@@ -33,8 +33,8 @@ jobs:
               team_slug: 'openbao-org-maintainers',
               username: user,
             });
-            // TODO: remove myself from whitelist 
-            if data.state !== 'active' && user !== 'wslabosz-reply' {
+            
+            if (data.state !== 'active' && user !== 'wslabosz-reply') {
               core.setFailed('Comment author not authorized.');
             }
           } catch (err) {
@@ -116,6 +116,19 @@ jobs:
       with:
         ref: ${{ needs.validate-permissions.outputs.commit_sha }}
 
+    - name: Set up Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      if: steps.dockerfile.outputs.exists == 'false'
+      with:
+        go-version: '1.26'
+           # add a mapping to type
+        cache-dependency-path: ./wrappers/awskms/go.mod
+
     - name: Run ${{ needs.validate-permissions.outputs.type }} integration test 
-      run: |
-        echo "test ${{ needs.validate-permissions.outputs.type }}"
+      if: steps.dockerfile.outputs.exists == 'false'
+      # add a mapping to type
+      working-directory: ./wrappers/awskms
+      env:
+        KMS_ACC_TESTS: true
+      run: go test ./...
+

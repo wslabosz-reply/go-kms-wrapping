@@ -93,9 +93,14 @@ func TestAwsKmsWrapper_Lifecycle(t *testing.T) {
 //   - AWS_ACCESS_KEY_ID
 //   - AWS_SECRET_ACCESS_KEY
 func TestAccAwsKmsWrapper_Lifecycle(t *testing.T) {
+	if os.Getenv("VAULT_ACC") == "" && os.Getenv("KMS_ACC_TESTS") == "" {
+		t.SkipNow()
+	}
+
 	if os.Getenv(EnvAwsKmsWrapperKeyId) == "" && os.Getenv(EnvVaultAwsKmsSealKeyId) == "" {
 		t.SkipNow()
 	}
+
 	s := NewWrapper()
 	testEncryptionRoundTrip(t, s)
 }
