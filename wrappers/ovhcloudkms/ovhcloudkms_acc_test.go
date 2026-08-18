@@ -25,7 +25,7 @@ import (
 // token:
 //   - OVHCLOUDKMS_TOKEN
 //
-// mTLS:
+// or mTLS:
 //   - OVHCLOUDKMS_CLIENT_CERT
 //   - OVHCLOUDKMS_CLIENT_KEY
 func TestAccOvhcloudKmsWrapper_Lifecycle(t *testing.T) {
