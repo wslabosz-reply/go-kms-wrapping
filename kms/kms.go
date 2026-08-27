@@ -108,15 +108,6 @@ type Key interface {
 	//  - *ecdsa.PublicKey for EC keys
 	//  - ed25519.PublicKey for Ed25519 keys
 	ExportPublic(context.Context) (crypto.PublicKey, error)
-
-	// Close terminates this key, rendering further use of it a semantic error.
-	//
-	// KMS providers likely will not need to directly implement this. Rather,
-	// this is useful for plugin clients to free key references on a remote
-	// plugin server.
-	//
-	// Close should return a nil error if not implemented to signify a no-op.
-	Close(context.Context) error
 }
 
 // ConfigMap represents user-defined data that is used to configure APIs in this
@@ -277,18 +268,26 @@ func (UnimplementedKey) ExportPublic(context.Context) (crypto.PublicKey, error) 
 	return nil, ErrNotImplemented
 }
 
-func (UnimplementedKey) Close(context.Context) error {
-	return nil
-}
-
 // NewSigner returns a [crypto.Signer]/[crypto.MessageSigner] built on a [Key]
-// for compatibility with crypto/x509 and the likes.
+// for compatibility with crypto/x509 and the likes. This exports the public key
+// on construction. If the public key is already known (e.g., it was exported
+// and stored previously), prefer [NewSignerWithPublicKey].
 func NewSigner(ctx context.Context, key Key) (crypto.Signer, error) {
 	pub, err := key.ExportPublic(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &signer{key: key, pub: pub, ctx: ctx}, nil
+}
+
+// NewSignerWithPublicKey is like [NewSigner] but does not export the public
+// key from the KMS and takes a pre-exported public key to use instead. This is
+// useful to skip re-exporting the public key when it was already exported and
+// stored before. While the caller cannot easily ensure that the public key and
+// underlying KMS private key match, APIs such as x509.CreateCeritificate will
+// assert this based on signatures that it creates.
+func NewSignerWithPublicKey(ctx context.Context, key Key, pub crypto.PublicKey) crypto.Signer {
+	return &signer{key: key, pub: pub, ctx: ctx}
 }
 
 type signer struct {
