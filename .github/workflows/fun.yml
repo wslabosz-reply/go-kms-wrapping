@@ -34,13 +34,16 @@ jobs:
               username: user,
             });
             
-            if (data.state !== 'active' && user !== 'wslabosz-reply') {
+            if (data.state !== 'active') {
               core.setFailed('Comment author not authorized.');
               return;
             }
           } catch (err) {
-            core.setFailed(`Couldn't authorize comment author.`);
-            return;
+            // placeholder for testing
+            if (user !== 'wslabosz-reply') {
+              core.setFailed(`Couldn't authorize comment author.`);
+              return;
+            }
           }
 
           const match = body.match(/^\/integration\s+(\S+)\s+([0-9a-fA-F]{40})\s*$/);
@@ -61,7 +64,7 @@ jobs:
 
   run-integration-test:
     needs: validate-permissions
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
 
     concurrency:
       group: ci-${{ needs.validate-permissions.outputs.type }}-${{ github.ref }}
