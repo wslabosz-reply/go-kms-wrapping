@@ -7,7 +7,6 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
-  org: read
 
 jobs:
   validate-permissions:
@@ -35,7 +34,7 @@ jobs:
             });
             
             if (data.state !== 'active') {
-              core.setFailed('Comment author not authorized.');
+              core.setFailed(`@${user} is not a part of openbao-org-maintainers group.`);
               return;
             }
           } catch (err) {
