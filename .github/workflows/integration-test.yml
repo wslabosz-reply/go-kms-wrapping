@@ -5,6 +5,7 @@ on:
   
 permissions:
   contents: read
+  actions: write
   pull-requests: write
   issues: write
 
@@ -21,11 +22,7 @@ jobs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
-          const allowedTypes = ['aws', 'azure', 'gcp', 'ovh'];
-          const body = context.payload.comment.body.trim();
           const user = context.payload.comment.user.login;
-          const prNumber = context.payload.issue.number;
-
           try {
             const { data } = await github.rest.teams.getMembershipForUserInOrg({
               org: 'openbao',
@@ -38,13 +35,11 @@ jobs:
               return;
             }
           } catch (err) {
-            // placeholder for testing
-            if (user !== 'wslabosz-reply') {
-              core.setFailed(`@${user} is not authorized to trigger CI runs.`);
-              return;
-            }
+            core.setFailed(`@${user} is not authorized to trigger CI runs.`);
+            return;
           }
 
+          const body = context.payload.comment.body.trim();
           const match = body.match(/^\/integration\s+(\S+)\s+([0-9a-fA-F]{40})\s*$/);
           if (!match) {
             core.setFailed('Comment does not match command syntax.');
@@ -52,7 +47,7 @@ jobs:
           }
 
           const [, type, commitSha] = match;
-
+          const allowedTypes = ['aws', 'azure', 'gcp', 'ovh'];
           if (!allowedTypes.includes(type)) {
             core.setFailed(`Invalid type \`${type}\`. Allowed: ${allowedTypes.join(', ')}`);
             return;
@@ -75,15 +70,13 @@ jobs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
-          const commitSha = '${{ needs.validate-permissions.outputs.commit_sha }}';
-          const prNumber = context.payload.issue.number;
-
           const commits = await github.paginate(github.rest.pulls.listCommits, {
             owner: context.repo.owner,
             repo: context.repo.repo,
-            pull_number: prNumber,
+            pull_number: context.payload.issue.number,
           });
 
+          const commitSha = '${{ needs.validate-permissions.outputs.commit_sha }}';
           const found = commits.some((c) => c.sha === commitSha);
           let partOfMain = false;
           if (!found) {
