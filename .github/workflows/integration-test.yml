@@ -100,7 +100,7 @@ jobs:
             }
           }
 
-          if (!found || !partOfMain) {
+          if (!found && !partOfMain) {
             core.setFailed(`Commit ${commitSha} not in PR history nor already on main.`);
           }
 
