@@ -1,5 +1,4 @@
-# TODO: pin actions hashes
-name: funny
+name: Run integration test on pull request comment
 on:
   issue_comment:
     types: [created]
@@ -8,6 +7,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  org: read
 
 jobs:
   validate-permissions:
@@ -19,7 +19,7 @@ jobs:
     steps:
     - name: Evaluate user permission
       id: evaluate
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const allowedTypes = ['aws', 'azure', 'gcp', 'ovh'];
@@ -73,7 +73,7 @@ jobs:
     steps:
     # TOCTOU protection: confirm commit_sha is part of this PR's history or has landed on main.
     - name: Verify commit belongs to PR
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const commitSha = '${{ needs.validate-permissions.outputs.commit_sha }}';
@@ -106,7 +106,7 @@ jobs:
           }
 
     - name: Bump comment
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           await github.rest.reactions.createForIssueComment({
@@ -117,11 +117,11 @@ jobs:
           });
 
     - name: Checkout reviewed commit with provided sha
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ needs.validate-permissions.outputs.commit_sha }}
 
-    - name: Map integration test type to directory
+    - name: Map directory to integration test
       id: map
       run: |
         case "${{ needs.validate-permissions.outputs.type }}" in
@@ -145,7 +145,7 @@ jobs:
 
     - name: Comment with integration test run link
       if: always()
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           try {
